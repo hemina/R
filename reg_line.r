@@ -8,7 +8,7 @@ namesVec<- c("mois", "cdSi", "noCtrScr", "cdFam", "cdSFam", "noPse", "age", "cdS
 names(ancien_client) <- namesVec
 names(nouveau_client) <- namesVec
 
-cdmetier <- read.table("~/ValeurClient/cdmetier.csv", sep=";")
+cdmetier <- read.table("~/cdmetier.csv", sep=";")
 cdmetier <- cdmetier[complete.cases(cdmetier),] #enlever les NA
 names(cdmetier) <- c("codemetier", "metier")
 

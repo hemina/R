@@ -18,7 +18,7 @@ nouveau_client$mois <- ymd(nouveau_client$mois)
 ancien_client$cdSi <- as.factor(ancien_client$cdSi)
 nouveau_client$cdSi <- as.factor(nouveau_client$cdSi)
 
-cdmetier <- read.table("~/ValeurClient/cdmetier.csv", sep=";")
+cdmetier <- read.table("~/cdmetier.csv", sep=";")
 cdmetier <- cdmetier[complete.cases(cdmetier),] #enlever les NA
 names(cdmetier) <- c("codemetier", "metier")
 
@@ -61,10 +61,11 @@ dev.off()
 
 pdf(file = "~/R/metier_distribution.pdf")
 for(i in 1:length(ancien_client_par_mois)){
+#  opar=par(ps=10)
   plot_metier <- barplot(xtabs(~ancien_client_par_mois[[i]]$metier), col = rainbow(length(levels(ancien_client_par_mois[[i]]$metier))), 
                      space=NULL, cex.names = 0.8, legend.text = levels(ancien_client_par_mois[[i]]$metier), 
                      args.legend = list(x="topleft", cex=0.6), main = ancien_client_par_mois[[i]]$mois[1])
-  text(plot_metier, xtabs(~ancien_client_par_mois[[i]]$metier), labels=as.character(xtabs(~ancien_client_par_mois[[i]]$metier)), xpd=TRUE, pos=3)
+#  text(plot_metier, xtabs(~ancien_client_par_mois[[i]]$metier), labels=as.character(xtabs(~ancien_client_par_mois[[i]]$metier)), xpd=TRUE, pos=3)
 }
 dev.off()
 
@@ -73,7 +74,7 @@ for(i in 1:length(ancien_client_par_mois)){
   plot_region <- barplot(xtabs(~ancien_client_par_mois[[i]]$region), col = rainbow(length(levels(ancien_client_par_mois[[i]]$region))), 
                          space=NULL, cex.names = 0.8, legend.text = levels(ancien_client_par_mois[[i]]$region), 
                          args.legend = list(x="topleft", cex=0.6), main = ancien_client_par_mois[[i]]$mois[1], xlab = "Region", ylab= "Nombre de nouveaux contrats")
-  text(plot_region, xtabs(~ancien_client_par_mois[[i]]$region), labels=as.character(xtabs(~ancien_client_par_mois[[i]]$region)), xpd=TRUE, pos=3)
+#  text(plot_region, xtabs(~ancien_client_par_mois[[i]]$region), labels=as.character(xtabs(~ancien_client_par_mois[[i]]$region)), xpd=TRUE, pos=3)
 }
 dev.off()
 

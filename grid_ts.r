@@ -22,9 +22,9 @@ nouveau_client <- select(nouveau_client_raw, mois, dateOuv, cdSi, noPse, noContr
 ancien_client$mois <- ymd(ancien_client$mois)
 nouveau_client$mois <- ymd(nouveau_client$mois)
 
-ancien_client_grid <- ancien_client %>% group_by(mois, nbCotitulaire, cdSex, cdSFam, ageTranche)%>% 
-  summarise(nb=n()) %>% data.frame() %>% arrange(nbCotitulaire, cdSex, cdSFam, ageTranche)%>% 
-  mutate(category= paste(nbCotitulaire, cdSex, cdSFam, ageTranche, sep=" - "), time=mois-as.Date("2015-06-30")) %>%
+ancien_client_grid <- ancien_client %>% group_by(mois, cdSi, nbCotitulaire, cdSex, cdSFam, ageTranche)%>% 
+  summarise(nb=n()) %>% data.frame() %>% arrange(cdSi, nbCotitulaire, cdSex, cdSFam, ageTranche)%>% 
+  mutate(category= paste(cdSi, nbCotitulaire, cdSex, cdSFam, ageTranche, sep=" - "), time=mois-as.Date("2015-06-30")) %>%
   select(category, mois, time, nb) %>% arrange(nb)
 
 plot(ancien_client_grid$mois, ancien_client_grid$nb)
@@ -46,31 +46,39 @@ for(i in ind){
 
   # Generer une serie temporelle pour utiliser les modeles, pour pouvoir utiliser le modele HoltWinter, j'ai mis la periode=3, en vrai, periode=12
   ts_df <- ts(df$nb,frequency =3)
-  plot(decompose(ts_df), main=sp_ancien[[i]]$category[[1]])
+#  plot(decompose(ts_df), main=sp_ancien[[i]]$category[[1]])
   
-  ts_df.arima100 <- arima(ts_df, order=c(1,0,0))
-  ts_df.pred1 <- predict(ts_df.arima100, n.ahead=3*2)
-  ts.plot(ts_df, ts_df.pred1$pred, lty=1:2, col=c("black", "blue"), main=sp_ancien[[i]]$category[[1]])
-  
-  ts_df.arima001 <- arima(ts_df, order=c(0,0,1))
-  ts_df.pred001 <- predict(ts_df.arima001, n.ahead=3*2)
-  lines(ts_df.pred001$pred, col="yellow")
-  
-  lines(stlf(ts_df)$mean, lty=2, col='green')
-  
+#   ts_df.arima100 <- arima(ts_df, order=c(0,0,0))
+#   ts_df.pred1 <- predict(ts_df.arima100, n.ahead=3*2)
+#   ts.plot(ts_df, ts_df.pred1$pred, lty=1:2, col=c("black", "blue"), main=sp_ancien[[i]]$category[[1]])
+#   
+#   ts_df.arima001 <- arima(ts_df, order=c(0,0,1))
+#   ts_df.pred001 <- predict(ts_df.arima001, n.ahead=3*2)
+#   lines(ts_df.pred001$pred, lty=2, col="yellow")
   df_hw <- HoltWinters(ts_df, gamma=FALSE)
   df_pred_hw <- predict(df_hw, n.ahead = 3*2)
-  lines(df_pred_hw, col='red', lty=2)
+  plot(df_hw, df_pred_hw, lty=1:2, main=sp_ancien[[i]]$category[[1]])
+  
+  df_stl_ets <- stlf(ts_df)
+  lines(df_stl_ets$mean, lty=2, col='green')
+  
+  df_stl_arima <- stlf(ts_df, method='arima')
+  lines(df_stl_arima$mean, lty=2, col='blue')
 
-  legend("topright",lty=1, pch=1, col=c("black", "blue", "yellow", "green", "red"), 
-         c("data", "AR1", "MA1", "stlf","Holt Winters"))
+
+  legend("topright",lty=1, pch=1, col=c("black", "green", "blue", "red"), 
+         c("data", "stl+ETS", "stl+arima", "Holt Winters"))
+  
+  df_hww <- forecast.HoltWinters(df_hw, gamma=FALSE)
+  
+  # qqplot pour verifier les residuals sont de distribution Gaussien
+  qqnorm(df_hww$residuals, main="verify residuals of HoltWinters", col='red')
+  qqline(df_hww$residuals, col='red')
+  
+  qqnorm(df_stl_ets$residuals, main="verify residuals of stl + ETS", col='green')
+  qqline(df_stl_ets$residuals, col='green')  
+  
+  qqnorm(df_stl_arima$residuals, main="verify residuals of stl + arima", col='blue')
+  qqline(df_stl_arima$residuals, col='blue')  
 }
 dev.off()
-
-tsmod <- stlm(ts_df, modelfunction=ar)
-plot(forecast(tsmod, h=36))
-
-ts.plot(ts_df, main="Nombre de nouveaux contrats par mois", xlab="mois", ylab="nombre de nouveaux contrats", type='l')
-lines(ts_df.pred1$pred, col="green")
-lines(ts_df.pred1$pred+2*ts_df.pred1$se, col="green")
-lines(ts_df.pred1$pred-2*ts_df.pred1$se, col="green")
